@@ -1,4 +1,9 @@
 ﻿@page
+
+@model IndexModel
+@{
+    ViewData["Title"] = "Game";
+}
     <div class="container">
         <div class="row">&nbsp;</div>
         <div class="row">
@@ -23,7 +28,20 @@
     </div>
     <div class="row">
         <div class="col-6">
-            <ul id="messagesList"></ul>
+            @{ var cells = Model.SudokuGame.CurrentRound.Field.Cells; }
+            <table class="sudoku-field">
+                @for (var row = 0; row < cells.GetLength(0); row++)
+                {
+                    <tr>
+                        @for (var col = 0; col < cells.GetLength(1); col++)
+                        {
+                            <td>
+                                <input type="number" class="sudoku-cell" id="@row,@col" value="@(cells[row, col].Value)" min=0 max=9/>
+                            </td>
+                        }
+                    </tr>
+                }
+            </table>
         </div>
     </div>
 <script src="~/js/signalr/dist/browser/signalr.js"></script>

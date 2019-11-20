@@ -7,6 +7,8 @@ namespace Sudoku.Services
 {
     public interface ISudokuGame
     {
+        Round CurrentRound { get; }
+
         Round NewRound();
 
         User CreateUser(string connectionId, string name);

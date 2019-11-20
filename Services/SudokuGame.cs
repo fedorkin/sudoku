@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Sudoku.Models;
 using Sudoku.Models.Game;
 
@@ -11,7 +10,13 @@ namespace Sudoku.Services
     {
         static List<User> users = new List<User>();
 
-        static Round currenRound = new Round(); 
+        static Round currentRound = new Round();        
+
+        public Round CurrentRound
+        {
+            get => currentRound;
+            set => currentRound = value;
+        } 
 
         public User CreateUser(string connectionId, string name)
         {
@@ -49,16 +54,16 @@ namespace Sudoku.Services
 
         public Round NewRound()
         {
-            currenRound = new Round();
+            CurrentRound = new Round();
 
-            return currenRound;
+            return CurrentRound;
         }
 
         public Cell UpdateCell(byte rowIndex, byte colIndex, byte value, string connectionId)
         {
             ValidateCellParameters(rowIndex, colIndex, value, connectionId);
             
-            var cell = currenRound.Field.Cells[rowIndex, colIndex];
+            var cell = CurrentRound.Field.Cells[rowIndex, colIndex];
             var user = GetUserByConnectionId(connectionId);
 
             var canWriteValue = string.IsNullOrEmpty(cell.UserConnectionId) || cell.UserConnectionId.Equals(connectionId); 
@@ -75,12 +80,12 @@ namespace Sudoku.Services
 
         private void ValidateCellParameters(byte rowIndex, byte colIndex, byte value, string connectionId)
         {
-            if (rowIndex >= currenRound.Field.Cells.GetLength(0))
+            if (rowIndex >= CurrentRound.Field.Cells.GetLength(0))
             {
                 throw new IndexOutOfRangeException($"{nameof(rowIndex)}:{rowIndex} can't be more or equal field rank");
             }
 
-            if (colIndex >= currenRound.Field.Cells.GetLength(1))
+            if (colIndex >= CurrentRound.Field.Cells.GetLength(1))
             {
                 throw new IndexOutOfRangeException($"{nameof(colIndex)}:{colIndex} can't be more or equal field rank");
             }

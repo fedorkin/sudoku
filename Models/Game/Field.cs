@@ -4,9 +4,12 @@ namespace Sudoku.Models.Game
     {
         public Cell[,] Cells { get; }
 
+        public int Rank { get; }
+
         public Field (byte rank)
         {
-            Cells = new Cell[rank, rank];
+            Rank = rank;
+            Cells = new Cell[Rank, Rank];
         }
     }
 }
