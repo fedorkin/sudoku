@@ -4,11 +4,11 @@ namespace Sudoku.Services
 {
     public enum LevelOfDifficult
     {
-        Simple = 0,
+        Simple = 1,
 
-        Medium = 1,
+        Medium = 2,
 
-        Hard = 2
+        Hard = 3
     }
 
     public interface ISudokuFieldProvider

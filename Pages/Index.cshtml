@@ -36,7 +36,15 @@
                         @for (var col = 0; col < cells.GetLength(1); col++)
                         {
                             <td>
-                                <input type="number" class="sudoku-cell" id="@row,@col" value="@(cells[row, col].Value)" min=0 max=9/>
+                                @{
+                                    var strValue = string.Empty;
+                                    
+                                    if (cells[row, col].Value > 0)
+                                    {
+                                        strValue = cells[row, col].Value.ToString();
+                                    }
+                                }
+                                <input type="number" class="sudoku-cell" id="@row,@col" value="@strValue" min=0 max=9/>
                             </td>
                         }
                     </tr>
