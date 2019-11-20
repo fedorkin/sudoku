@@ -28,7 +28,7 @@ namespace Sudoku
             services.AddRazorPages();
             services.AddSignalR();
 
-            services.AddScoped<ISudokuGame, SudokuGame>();
+            services.AddScoped<ISudokuCore, SudokuCore>();
             services.AddScoped<ISudokuFieldProvider, SudokuFieldProvider>();
         }
 

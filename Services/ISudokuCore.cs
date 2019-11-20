@@ -4,7 +4,7 @@ using Sudoku.Models.Game;
 
 namespace Sudoku.Services
 {
-    public interface ISudokuGame
+    public interface ISudokuCore
     {
         Round CurrentRound { get; }
 

@@ -14,13 +14,13 @@ namespace Sudoku.Pages
         private readonly ILogger<IndexModel> _logger;
 
 
-        public IndexModel(ILogger<IndexModel> logger, ISudokuGame sudokuGame)
+        public IndexModel(ILogger<IndexModel> logger, ISudokuCore sudokuGame)
         {
             _logger = logger;
             SudokuGame = sudokuGame;
         }
         
-        public ISudokuGame SudokuGame { get; }
+        public ISudokuCore SudokuGame { get; }
 
         public void OnGet()
         {

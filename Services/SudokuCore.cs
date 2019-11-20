@@ -6,13 +6,13 @@ using Sudoku.Models.Game;
 
 namespace Sudoku.Services
 {
-    public class SudokuGame : ISudokuGame
+    public class SudokuCore : ISudokuCore
     {
         static List<User> users = new List<User>();
 
         static Round currentRound = null;
 
-        public SudokuGame(ISudokuFieldProvider fieldProvider)
+        public SudokuCore(ISudokuFieldProvider fieldProvider)
         {
             FieldProvider = fieldProvider;
 
