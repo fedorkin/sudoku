@@ -4,7 +4,7 @@ namespace Sudoku.Models.Game
     {
         public Cell[,] Cells { get; }
 
-        public int Rank { get; }
+        public byte Rank { get; }
 
         public Field (byte rank)
         {

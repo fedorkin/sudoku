@@ -10,13 +10,25 @@ namespace Sudoku.Services
     {
         static List<User> users = new List<User>();
 
-        static Round currentRound = new Round();        
+        static Round currentRound = null;
+
+        public SudokuGame(ISudokuFieldProvider fieldProvider)
+        {
+            FieldProvider = fieldProvider;
+
+            if (CurrentRound == null)
+            {
+                NewRound();
+            }
+        }
 
         public Round CurrentRound
         {
             get => currentRound;
             set => currentRound = value;
-        } 
+        }
+
+        public ISudokuFieldProvider FieldProvider { get; }
 
         public User CreateUser(string connectionId, string name)
         {
@@ -52,11 +64,12 @@ namespace Sudoku.Services
             return users.SingleOrDefault(u => u.ConnectionId.Equals(connectionId));
         }
 
-        public Round NewRound()
+        public void NewRound()
         {
-            CurrentRound = new Round();
+            var round = new Round();
+            FieldProvider.Fill(round.Field, LevelOfDifficult.Medium);
 
-            return CurrentRound;
+            CurrentRound = round;
         }
 
         public Cell UpdateCell(byte rowIndex, byte colIndex, byte value, string connectionId)

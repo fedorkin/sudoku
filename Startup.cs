@@ -28,7 +28,8 @@ namespace Sudoku
             services.AddRazorPages();
             services.AddSignalR();
 
-            services.AddSingleton<ISudokuGame, SudokuGame>();
+            services.AddScoped<ISudokuGame, SudokuGame>();
+            services.AddScoped<ISudokuFieldProvider, SudokuFieldProvider>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

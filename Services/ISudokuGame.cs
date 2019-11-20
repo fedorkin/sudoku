@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Sudoku.Models;
 using Sudoku.Models.Game;
 
@@ -9,7 +8,7 @@ namespace Sudoku.Services
     {
         Round CurrentRound { get; }
 
-        Round NewRound();
+        void NewRound();
 
         User CreateUser(string connectionId, string name);
 
