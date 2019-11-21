@@ -70,14 +70,14 @@ body {
   line-height: 60px; /* Vertically center the text there */
 }
 
+.sudoku-cell.error {
+  color: red;
+}
+
 .sudoku-cell {
   width: 50px;
   height: 50px;
   text-align: center;
-}
-
-.sudoku-cell .error {
-  color: red;
 }
 
 input::-webkit-outer-spin-button,

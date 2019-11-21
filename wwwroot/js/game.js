@@ -20,7 +20,11 @@ connection.on("ReceiveCellValue", function (row, col, value, userName) {
 });
 
 connection.on("CompettingCellIndexesException", function (row, col, compettingCellIndexes) {
-    
+    compettingCellIndexes.forEach(element => {
+        var cellId = `${element.item1},${element.item2}`;
+        var cell = document.getElementById(cellId);
+        cell.classList.add("error");
+    });
 });
 
 connection.on("DrawField", function (field) {
