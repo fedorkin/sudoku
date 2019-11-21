@@ -76,7 +76,7 @@ namespace Sudoku.Services
         {
             ValidateCellParameters(rowIndex, colIndex, value, connectionId);
             
-            var cell = CurrentRound.Field.Cells[rowIndex, colIndex];
+            ref Cell cell = ref CurrentRound.Field.Cells[rowIndex, colIndex];
             var user = GetUserByConnectionId(connectionId);
 
             var canWriteValue = string.IsNullOrEmpty(cell.UserConnectionId) || cell.UserConnectionId.Equals(connectionId); 

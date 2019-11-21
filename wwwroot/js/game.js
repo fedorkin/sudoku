@@ -13,6 +13,12 @@ connection.on("ReceiveMessage", function (user, message) {
     document.getElementById("messagesList").appendChild(li);
 });
 
+connection.on("ReceiveCellValue", function (row, col, value, readonly) {
+    var cellId = `${row},${col}`;
+    var cell = document.getElementById(cellId);
+    cell.value = value;
+});
+
 connection.start().then(function () {
     document.getElementById("sendButton").disabled = false;
 }).catch(function (err) {
@@ -27,3 +33,20 @@ document.getElementById("sendButton").addEventListener("click", function (event)
     });
     event.preventDefault();
 });
+
+var cells = document.getElementsByClassName("sudoku-cell");
+Array.from(cells).forEach(function(element) {
+    element.addEventListener('change', function(event){
+        var cell = event.target;
+        var index = cell.id.split(',');
+        var row = parseInt(index[0]);
+        var col = parseInt(index[1]);
+        var value = parseInt(cell.value);
+        var user = document.getElementById("userInput").value;
+    
+        connection.invoke("UpdateCellValue", row, col, value, user).catch(function (err) {
+            return console.error(err.toString());
+        });
+        event.preventDefault();
+    });
+  });

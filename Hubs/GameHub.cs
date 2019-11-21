@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
-using Sudoku.Models.Game;
 using Sudoku.Services;
 
 namespace Sudoku.Hubs
@@ -19,9 +18,19 @@ namespace Sudoku.Hubs
             await Clients.All.SendAsync("ReceiveMessage", user, message);
         }
 
-        public async Task UpdateCell(byte row, byte col, byte value)
+        public async Task UpdateCellValue(byte row, byte col, byte value, string userName)
         {
-            var connectionId = Clients.
+            var connectionId = Context.ConnectionId;
+            var user = SudokuCore.GetUserByConnectionId(connectionId);
+            if (user == null)
+            {
+                SudokuCore.CreateUser(connectionId, userName);
+            }
+
+            SudokuCore.UpdateCell(row, col, value, connectionId);
+
+            // обновляем у остальных ползователей ячейку с признаком readonly
+            await Clients.AllExcept(connectionId).SendAsync("ReceiveCellValue", row, col, value, true);
         }
     }
 }
