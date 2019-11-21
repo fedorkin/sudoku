@@ -1,6 +1,6 @@
 namespace Sudoku.Models.Game
 {
-    public class Field
+    public struct Field
     {
         public Cell[,] Cells { get; }
 

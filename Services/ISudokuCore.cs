@@ -17,5 +17,7 @@ namespace Sudoku.Services
         ICollection<User> GetTopUsers(int limit);
 
         Cell UpdateCell(byte rowIndex, byte colIndex, byte value, string connectionId);
+
+        //Field GetFieldForUser(User user);
     }
 }

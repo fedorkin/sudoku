@@ -76,6 +76,10 @@ body {
   text-align: center;
 }
 
+.sudoku-cell .error {
+  color: red;
+}
+
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
     /* display: none; <- Crashes Chrome on hover */
@@ -85,4 +89,13 @@ input::-webkit-inner-spin-button {
 
 input[type=number] {
     -moz-appearance:textfield; /* Firefox */
+}
+
+input[type="number"][disabled] {
+  background: lightgray;
+}
+
+input[user="null"] {
+  font-weight: bold;
+  font-size: medium;
 }

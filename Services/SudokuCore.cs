@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Sudoku.Exceptions;
 using Sudoku.Models;
 using Sudoku.Models.Game;
 
@@ -12,9 +13,10 @@ namespace Sudoku.Services
 
         static Round currentRound = null;
 
-        public SudokuCore(ISudokuFieldProvider fieldProvider)
+        public SudokuCore(ISudokuFieldProvider fieldProvider, ISudokuFieldVerifier fieldVerifier)
         {
             FieldProvider = fieldProvider;
+            FieldVerifier = fieldVerifier;
 
             if (CurrentRound == null)
             {
@@ -29,6 +31,8 @@ namespace Sudoku.Services
         }
 
         public ISudokuFieldProvider FieldProvider { get; }
+
+        public ISudokuFieldVerifier FieldVerifier { get; }
 
         public User CreateUser(string connectionId, string name)
         {
@@ -53,6 +57,29 @@ namespace Sudoku.Services
 
             return result;
         }
+
+        // public Field GetFieldForUser(User user)
+        // {
+        //     if (user == null)
+        //     {
+        //         throw new ArgumentNullException(nameof(user));
+        //     }
+
+        //     var commonField = CurrentRound.Field;
+        //     var userField = new Field(commonField.Rank);
+
+        //     for (var row = 0; row < commonField.Cells.GetLength(0); row++)
+        //     {
+        //         for (var col = 0; col < commonField.Cells.GetLength(1); col++)
+        //         {
+        //             var userCell = commonField.Cells[row, col];
+        //             userCell.Editable = (userCell.Value == 0) || user.Name.Equals(userCell.UserName);
+        //             userField.Cells[row, col] = userCell;
+        //         }
+        //     }
+
+        //     return userField;
+        // }
 
         public ICollection<User> GetTopUsers(int limit)
         {
@@ -79,16 +106,26 @@ namespace Sudoku.Services
             ref Cell cell = ref CurrentRound.Field.Cells[rowIndex, colIndex];
             var user = GetUserByConnectionId(connectionId);
 
-            var canWriteValue = string.IsNullOrEmpty(cell.UserConnectionId) || cell.UserConnectionId.Equals(connectionId); 
+            var canWriteValue = string.IsNullOrEmpty(cell.UserName) || cell.UserName.Equals(user.Name); 
             if (!canWriteValue)
             {
                 throw new AccessViolationException($"The User:{user.Name} has no right to edit the cell[{rowIndex}, {colIndex}]");
             }
 
+            if (!FieldVerifier.Verify(CurrentRound.Field, rowIndex, colIndex, value, out List<Tuple<byte, byte>> compettingCellIndexes))
+            {
+                throw new CompettingCellIndexesException(compettingCellIndexes);
+            }
+
             cell.Value = value;
-            cell.UserConnectionId = connectionId;
+            cell.UserName = user.Name;
 
             return cell;
+        }
+
+        private void VerifyCellValue(byte rowIndex, byte colIndex, byte value)
+        {
+
         }
 
         private void ValidateCellParameters(byte rowIndex, byte colIndex, byte value, string connectionId)

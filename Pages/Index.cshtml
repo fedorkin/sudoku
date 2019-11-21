@@ -5,52 +5,15 @@
     ViewData["Title"] = "Game";
 }
     <div class="container">
-        <div class="row">&nbsp;</div>
         <div class="row">
-            <div class="col-2">User</div>
-            <div class="col-4"><input type="text" id="userInput" /></div>
-        </div>
-        <div class="row">
-            <div class="col-2">Message</div>
-            <div class="col-4"><input type="text" id="messageInput" /></div>
-        </div>
-        <div class="row">&nbsp;</div>
-        <div class="row">
-            <div class="col-6">
-                <input type="button" id="sendButton" value="Send Message" />
-            </div>
+            <div>User</div>
+            <div><input type="text" id="userInput" /></div>
+            <button class="button signup-button" id="signUpButton">SignUp</button>
         </div>
     </div>
-    <div class="row">
-        <div class="col-12">
-            <hr />
-        </div>
+    <div>
+        <table class="sudoku-field" id="field"></table>
     </div>
-    <div class="row">
-        <div class="col-6">
-            @{ var cells = Model.SudokuGame.CurrentRound.Field.Cells; }
-            <table class="sudoku-field">
-                @for (var row = 0; row < cells.GetLength(0); row++)
-                {
-                    <tr>
-                        @for (var col = 0; col < cells.GetLength(1); col++)
-                        {
-                            <td>
-                                @{
-                                    var strValue = string.Empty;
-                                    
-                                    if (cells[row, col].Value > 0)
-                                    {
-                                        strValue = cells[row, col].Value.ToString();
-                                    }
-                                }
-                                <input type="number" class="sudoku-cell" id="@row,@col" value="@strValue"/>
-                            </td>
-                        }
-                    </tr>
-                }
-            </table>
-        </div>
-    </div>
+
 <script src="~/js/signalr/dist/browser/signalr.js"></script>
 <script src="~/js/game.js"></script>
