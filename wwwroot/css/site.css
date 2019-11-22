@@ -91,11 +91,39 @@ input[type=number] {
     -moz-appearance:textfield; /* Firefox */
 }
 
-input[type="number"][disabled] {
+input[player="null"][disabled]  {
   background: lightgray;
 }
 
-input[user="null"] {
+input[player="null"] {
   font-weight: bold;
   font-size: medium;
 }
+
+table {
+  margin:1em auto;
+}
+.sudoku-field td {
+  height:30px;
+  width:30px;
+  border:1px solid;
+  text-align:center;
+}
+.sudoku-field td:first-child {
+  border-left:solid;
+}
+.sudoku-field td:nth-child(3n) {
+  border-right:solid ;
+}
+.sudoku-field tr:first-child {
+  border-top:solid;
+}
+.sudoku-field tr:nth-child(3n) td {
+  border-bottom:solid ;
+}
+
+.players-table th,
+.players-table td {
+  padding: 3px;
+  border: 1px solid black;
+ }

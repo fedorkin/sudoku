@@ -74,6 +74,7 @@ namespace Sudoku.Services
                 var col = random.Next(0, field.Rank);
 
                 field.Cells[row, col].Value = 0;
+                field.Cells[row, col].Editable = true;
             }
         }
     }

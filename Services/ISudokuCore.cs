@@ -11,16 +11,18 @@ namespace Sudoku.Services
 
         void NewRound();
 
-        User CreateUser(string connectionId, string name);
+        Player CreatePlayer(string connectionId, string name);
 
-        User GetUserByConnectionId(string connectionId);
+        Player GetPlayerByConnectionId(string connectionId);
 
-        ICollection<User> GetTopUsers(int limit);
+        ICollection<Player> GetTopPlayers(int limit);
 
         Cell UpdateCell(int rowIndex, int colIndex, byte value, string connectionId);
 
-        Field GetFieldForUser(User user);
+        Field GetFieldForPlayer(Player player);
 
         void AddCompetingValues(Field field, List<Point> competingValueCoordinates, byte value);
+
+        bool IsEndGame();
     }
 }

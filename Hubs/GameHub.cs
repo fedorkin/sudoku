@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Drawing;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using Sudoku.Exceptions;
@@ -19,39 +17,59 @@ namespace Sudoku.Hubs
         public async Task UpdateCellValue(byte row, byte col, byte value)
         {
             var connectionId = Context.ConnectionId;
-            var user = SudokuCore.GetUserByConnectionId(connectionId);
+            var player = SudokuCore.GetPlayerByConnectionId(connectionId);
 
-            List<Point> competingValueCoordinates = null;
             try
             {
+                // выставим значение в общем поле
                 var cell = SudokuCore.UpdateCell(row, col, value, connectionId);
 
-                // обновляем у остальных пользователей ячейку с признаком readonly
+                // выставляем данное значение другим пользователем
                 await Clients.AllExcept(connectionId).SendAsync("ReceiveCellValue", row, col, cell);
+                // отрисуем участников
+                await Clients.All.SendAsync("ReceivePlayers", SudokuCore.GetTopPlayers(10));
+
+                // если пользователь выставляет 0, скорей всего он отменяет неправильный ход
+                // нам следует перерисовать его поле целиком, чтобы убрать предыдущие ошибки
+                if (value == 0)
+                {
+                    await Clients.Caller.SendAsync("DrawField", SudokuCore.GetFieldForPlayer(player));
+                }
+
+                if (SudokuCore.IsEndGame())
+                {
+                    await NewGame();
+                    return;
+                }
             }
             catch (CompetingValueCoordinatesException exception)
             {
-                competingValueCoordinates = exception.Cells;
+                var playerField = SudokuCore.GetFieldForPlayer(player);
+                // пометим конфликтующие ячейки
+                SudokuCore.AddCompetingValues(playerField, exception.Cells, value);
+                // покажем пользователю ошибки
+                await Clients.Caller.SendAsync("DrawField", playerField);
             }
-
-            var userField = SudokuCore.GetFieldForUser(user);
-            if (competingValueCoordinates != null)
-            {
-                SudokuCore.AddCompetingValues(userField, competingValueCoordinates, value);
-            }
-
-            await Clients.Caller.SendAsync("DrawField", userField);
         }
 
-        public async Task SignedUser(string name)
+        public async Task SignedPlayer(string name)
         {
-            var user = SudokuCore.GetUserByConnectionId(Context.ConnectionId);
-            if (user == null)
+            var player = SudokuCore.GetPlayerByConnectionId(Context.ConnectionId);
+            if (player == null)
             {
-                user = SudokuCore.CreateUser(Context.ConnectionId, name);
+                player = SudokuCore.CreatePlayer(Context.ConnectionId, name);
             }
 
-            await Clients.Caller.SendAsync("DrawField", SudokuCore.GetFieldForUser(user));
+            await Clients.Caller.SendAsync("DrawField", SudokuCore.GetFieldForPlayer(player));
+            await Clients.All.SendAsync("ReceivePlayers", SudokuCore.GetTopPlayers(10));
+        }
+
+        public async Task NewGame()
+        {
+            // создадим новое поле и отрисуем его у всех игроков
+            SudokuCore.NewRound();
+            await Clients.All.SendAsync("ReceivePlayers", SudokuCore.GetTopPlayers(10));
+            await Clients.All.SendAsync("DrawField", SudokuCore.CurrentRound.Field);
         }
     }
 }

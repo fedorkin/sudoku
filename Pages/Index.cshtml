@@ -4,15 +4,15 @@
 @{
     ViewData["Title"] = "Game";
 }
-    <div class="container">
-        <div class="row">
-            <div>User</div>
-            <div><input type="text" id="userInput" /></div>
-            <button class="button signup-button" id="signUpButton">SignUp</button>
-        </div>
+<div class="container">
+    <div>
+        <div><input type="text" id="playerInput" placeholder="Player name"/></div>
+        <button class="button signup-button" id="signInButton">Sign in</button>
+        <button class="button newGame-button" id="newGameButton">New game</button>
     </div>
+    <div id="topScores-container">
     <div id="field-container">
-    </div>
+</div>
 
 <script src="~/js/signalr/dist/browser/signalr.js"></script>
 <script src="~/js/game.js"></script>

@@ -10,7 +10,7 @@ namespace Sudoku.Services
 {
     public class SudokuCore : ISudokuCore
     {
-        static List<User> users = new List<User>();
+        static List<Player> players = new List<Player>();
 
         static Round currentRound = null;
 
@@ -35,7 +35,7 @@ namespace Sudoku.Services
 
         public ISudokuFieldVerifier FieldVerifier { get; }
 
-        public User CreateUser(string connectionId, string name)
+        public Player CreatePlayer(string connectionId, string name)
         {
             if (string.IsNullOrEmpty(connectionId))
             {
@@ -47,39 +47,39 @@ namespace Sudoku.Services
                 throw new ArgumentNullException(nameof(name));
             }
 
-            if (GetUserByConnectionId(connectionId) != null)
+            if (GetPlayerByConnectionId(connectionId) != null)
             {
-                throw new ArgumentException($"User with connectionId = {connectionId} alread exists", 
+                throw new ArgumentException($"Player with connectionId = {connectionId} alread exists", 
                     nameof(name));
             }
 
-            var result = new User { ConnectionId = connectionId, Name = name };
-            users.Add(result);
+            var result = new Player { ConnectionId = connectionId, Name = name };
+            players.Add(result);
 
             return result;
         }
 
-        public Field GetFieldForUser(User user)
+        public Field GetFieldForPlayer(Player player)
         {
-            if (user == null)
+            if (player == null)
             {
-                throw new ArgumentNullException(nameof(user));
+                throw new ArgumentNullException(nameof(player));
             }
 
             var commonField = CurrentRound.Field;
-            var userField = new Field(commonField.Rank);
+            var playerField = new Field(commonField.Rank);
 
             for (var row = 0; row < commonField.Cells.GetLength(0); row++)
             {
                 for (var col = 0; col < commonField.Cells.GetLength(1); col++)
                 {
-                    var userCell = commonField.Cells[row, col];
-                    userCell.Editable = (userCell.Value == 0) || user.Name.Equals(userCell.UserName);
-                    userField.Cells[row, col] = userCell;
+                    var playerCell = commonField.Cells[row, col];
+                    playerCell.Editable = (playerCell.Value == 0) || player.Name.Equals(playerCell.PlayerName);
+                    playerField.Cells[row, col] = playerCell;
                 }
             }
 
-            return userField;
+            return playerField;
         }
 
         public void AddCompetingValues(Field field, List<Point> competingValueCoordinates, byte value)
@@ -92,20 +92,20 @@ namespace Sudoku.Services
             }
         }
 
-        public ICollection<User> GetTopUsers(int limit)
+        public ICollection<Player> GetTopPlayers(int limit)
         {
-            return users.OrderByDescending(u => u.NumberOfWins).ToList();
+            return players.OrderByDescending(u => u.Scores).ToList();
         }
 
-        public User GetUserByConnectionId(string connectionId)
+        public Player GetPlayerByConnectionId(string connectionId)
         {
-            return users.SingleOrDefault(u => u.ConnectionId.Equals(connectionId));
+            return players.SingleOrDefault(u => u.ConnectionId.Equals(connectionId));
         }
 
         public void NewRound()
         {
             var round = new Round();
-            FieldProvider.Fill(round.Field, LevelOfDifficult.Medium);
+            FieldProvider.Fill(round.Field, LevelOfDifficult.Simple);
 
             CurrentRound = round;
         }
@@ -115,12 +115,12 @@ namespace Sudoku.Services
             ValidateCellParameters(rowIndex, colIndex, value, connectionId);
             
             ref Cell cell = ref CurrentRound.Field.Cells[rowIndex, colIndex];
-            var user = GetUserByConnectionId(connectionId);
+            var player = GetPlayerByConnectionId(connectionId);
 
-            var canWriteValue = string.IsNullOrEmpty(cell.UserName) || cell.UserName.Equals(user.Name); 
+            var canWriteValue = string.IsNullOrEmpty(cell.PlayerName) || cell.PlayerName.Equals(player.Name); 
             if (!canWriteValue)
             {
-                throw new AccessViolationException($"The User:{user.Name} has no right to edit the cell[{rowIndex}, {colIndex}]");
+                throw new AccessViolationException($"The Player:{player.Name} has no right to edit the cell[{rowIndex}, {colIndex}]");
             }
 
             if (!FieldVerifier.Verify(CurrentRound.Field, rowIndex, colIndex, value, out List<Point> compettingCellIndexes))
@@ -129,10 +129,40 @@ namespace Sudoku.Services
             }
 
             cell.Value = value;
-            cell.UserName = value.Equals(0) ? null : user.Name;
+            cell.PlayerName = value.Equals(0) ? null : player.Name;
             cell.Editable = value.Equals(0);
+            
+            CalculateScores();
 
             return cell;
+        }
+
+        public bool IsEndGame()
+        {
+            foreach(var cell in CurrentRound.Field.Cells)
+            {
+                if (cell.Value == 0)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void CalculateScores()
+        {
+            players.ForEach(u => u.Scores = 0);
+
+            foreach(var cell in CurrentRound.Field.Cells)
+            {
+                var player = players.FirstOrDefault(u => u.Name.Equals(cell.PlayerName));
+
+                if (player != null)
+                {
+                    player.Scores++;
+                }
+            }
         }
         
         private void ValidateCellParameters(int rowIndex, int colIndex, byte value, string connectionId)

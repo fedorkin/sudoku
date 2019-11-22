@@ -2,8 +2,13 @@
 
 var connection = new signalR.HubConnectionBuilder().withUrl("/gameHub").build();
 
-// Disable send button until connection is established
-document.getElementById("signUpButton").disabled = true;
+document.getElementById("signInButton").disabled = true;
+
+connection.start().then(function () {
+    document.getElementById("signInButton").disabled = false;
+}).catch(function (err) {
+    return console.error(err.toString());
+});
 
 connection.on("DrawField", function (field) {
     if (!document.getElementById("field")) {
@@ -13,10 +18,9 @@ connection.on("DrawField", function (field) {
     fillTable(field);
 });
 
-connection.start().then(function () {
-    document.getElementById("signUpButton").disabled = false;
-}).catch(function (err) {
-    return console.error(err.toString());
+connection.on("ReceivePlayers", function(players) {
+    recreatePlayersTable(players);
+    recreatePlayersStyles(players);
 });
 
 connection.on("ReceiveCellValue", function (row, col, fieldCell) {
@@ -25,18 +29,93 @@ connection.on("ReceiveCellValue", function (row, col, fieldCell) {
     fillInputCell(inputCell, fieldCell);
 });
 
-document.getElementById("signUpButton").addEventListener("click", function (event) {
-    var name = document.getElementById("userInput").value;
-    connection.invoke("SignedUser", name).catch(function (err) {
+document.getElementById("signInButton").addEventListener("click", function (event) {
+    var playerInput = document.getElementById("playerInput");
+    playerInput.disabled = true;
+    
+    connection.invoke("SignedPlayer", playerInput.value).catch(function (err) {
+        playerInput.disabled = false;
         return console.error(err.toString());
     });
     event.preventDefault();
 });
 
+document.getElementById("newGameButton").addEventListener("click", function (event) {
+    connection.invoke("NewGame").catch(function (err) {
+        return console.error(err.toString());
+    });
+    event.preventDefault();
+});
+
+function recreatePlayersTable(players) {
+    var tableContainer = document.getElementById("topScores-container")
+
+    var table = document.getElementById("topScoresTable");
+    if (table != null) {
+        tableContainer.removeChild(topScoresTable);
+    }
+
+    table = document.createElement("table");
+    table.className = "players-table";
+    table.id = "topScoresTable";
+
+    var header = table.createTHead();
+    var row = header.insertRow();
+
+    var th = document.createElement("th");
+    var text = document.createTextNode("player");
+    th.appendChild(text);
+    row.appendChild(th);
+
+    th = document.createElement("th");
+    text = document.createTextNode("score");
+    th.appendChild(text);
+    row.appendChild(th);
+
+    players.forEach(player => {
+        row = table.insertRow();
+
+        var cell = row.insertCell();
+        var text = document.createTextNode(player.name);
+        cell.setAttribute('player', player.name);
+        cell.appendChild(text);
+
+        cell = row.insertCell();
+        text = document.createTextNode(player.scores);
+        cell.appendChild(text);
+    });
+
+    tableContainer.appendChild(table);
+}
+
+function recreatePlayersStyles(players) {
+    var styleSheet = document.getElementById("userColors");
+    if (styleSheet) {
+        document.head.removeChild(styleSheet);
+    }
+
+    styleSheet = document.createElement("style")
+    var currentPlayerName = document.getElementById("playerInput").value;
+
+    var styles = "";
+    players.forEach(player => {
+        var background = currentPlayerName === player.name ? "white" : intToRGB(hashCode(player.connectionId));
+        var color = currentPlayerName === player.name ? "black" : "white";
+        var playerStyle = `[player="${player.name}"] { background: ${background}; color: ${color}; }\n`;
+        styles += playerStyle;
+    });
+
+    styleSheet.id = "userColors"
+    styleSheet.type = "text/css"
+    styleSheet.innerText = styles
+    document.head.appendChild(styleSheet)
+}
+
 function createTable(field) {
     var tableContainer = document.getElementById("field-container")
     var table = document.createElement("table");
     table.id = "field";
+    table.className = "sudoku-field";
 
     for (var row = 0; row < field.rank; row++)
     {
@@ -51,7 +130,7 @@ function createTable(field) {
             inputCell.id = getCellId(row, col);
             inputCell.setAttribute('type', 'number');
             inputCell.setAttribute('min', '0');
-            inputCell.setAttribute('max', '9');
+            inputCell.setAttribute('max', field.rank);
 
             inputCell.addEventListener('input', inputCellHandler);
 
@@ -100,7 +179,7 @@ function getCellId(row, col) {
 }
 
 function fillInputCell(inputCell, fieldCell) {
-    inputCell.setAttribute('user', fieldCell.userName);
+    inputCell.setAttribute('player', fieldCell.playerName);
     inputCell.disabled = !fieldCell.editable;
     
     if (fieldCell.isCompeting) {
@@ -126,4 +205,20 @@ function listToMatrix(list, elementsPerSubArray) {
     }
 
     return matrix;
+}
+
+function hashCode(str) {
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+       hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return hash;
+} 
+
+function intToRGB(i){
+    var c = (i & 0x00FFFFFF)
+        .toString(16)
+        .toUpperCase();
+
+    return "#" + "00000".substring(0, 6 - c.length) + c;
 }
