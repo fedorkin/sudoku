@@ -25,13 +25,13 @@ namespace Sudoku.Services
 
         private void ChangeCellValue(Field field, byte firstTargetValue, byte secondTargetValue)
         {
-            for (int row = 0; row < field.Rank; row += 3)
+            for (var row = 0; row < field.Rank; row += 3)
             {
-                for (int col = 0; col < field.Rank; col += 3)
+                for (var col = 0; col < field.Rank; col += 3)
                 {
-                    for (int subRow = 0; subRow < 3; subRow++)
+                    for (var subRow = 0; subRow < 3; subRow++)
                     {
-                        for (int subCol = 0; subCol < 3; subCol++)
+                        for (var subCol = 0; subCol < 3; subCol++)
                         {
                             ref Cell currentCell = ref field.Cells[row + subRow, col + subCol];
 

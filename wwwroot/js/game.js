@@ -5,37 +5,24 @@ var connection = new signalR.HubConnectionBuilder().withUrl("/gameHub").build();
 // Disable send button until connection is established
 document.getElementById("signUpButton").disabled = true;
 
-connection.on("ReceiveMessage", function (user, message) {
-    var msg = message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    var encodedMsg = user + " says " + msg;
-    var li = document.createElement("li");
-    li.textContent = encodedMsg;
-    document.getElementById("messagesList").appendChild(li);
-});
-
-connection.on("ReceiveCellValue", function (row, col, value, userName) {
-    var cellId = `${row},${col}`;
-    var cell = document.getElementById(cellId);
-    setValueToCell(cell, value, userName);
-});
-
-connection.on("CompettingCellIndexesException", function (row, col, compettingCellIndexes) {
-    compettingCellIndexes.forEach(element => {
-        var cellId = `${element.item1},${element.item2}`;
-        var cell = document.getElementById(cellId);
-        cell.classList.add("error");
-    });
-});
-
 connection.on("DrawField", function (field) {
+    if (!document.getElementById("field")) {
+        createTable(field);
+    }
+
     fillTable(field);
-    addInputLisenerToCells();
 });
 
 connection.start().then(function () {
     document.getElementById("signUpButton").disabled = false;
 }).catch(function (err) {
     return console.error(err.toString());
+});
+
+connection.on("ReceiveCellValue", function (row, col, fieldCell) {
+    var cellId = getCellId(row, col);
+    var inputCell = document.getElementById(cellId);
+    fillInputCell(inputCell, fieldCell);
 });
 
 document.getElementById("signUpButton").addEventListener("click", function (event) {
@@ -46,65 +33,84 @@ document.getElementById("signUpButton").addEventListener("click", function (even
     event.preventDefault();
 });
 
-function addInputLisenerToCells()
-{
-    var cells = document.getElementsByClassName("sudoku-cell");
-    Array.from(cells).forEach(function(element) {
-        element.addEventListener('input', function(event){
-            var cell = event.target;
-            var index = cell.id.split(',');
-            var row = parseInt(index[0]);
-            var col = parseInt(index[1]);
+function createTable(field) {
+    var tableContainer = document.getElementById("field-container")
+    var table = document.createElement("table");
+    table.id = "field";
 
-            var value = parseInt(cell.value) || 0;
-
-            connection.invoke("UpdateCellValue", row, col, value).catch(function (err) {
-                return console.error(err.toString());
-            });
-            event.preventDefault();
-        });
-      });
-}
-
-function fillTable(field) {
-    var cells = listToMatrix(field.cells, field.rank);
-    var table = document.getElementById("field");
     for (var row = 0; row < field.rank; row++)
     {
         var tr = document.createElement('tr');
         
         for (var col = 0; col < field.rank; col++)
         {
-            var fieldCell = cells[row][col];
             var td = document.createElement('td');
 
-            var cell = document.createElement('input');
-            cell.className = 'sudoku-cell';
-            cell.id =`${row},${col}`;
-            cell.setAttribute('type', 'number');
+            var inputCell = document.createElement('input');
+            inputCell.className = 'sudoku-cell';
+            inputCell.id = getCellId(row, col);
+            inputCell.setAttribute('type', 'number');
+            inputCell.setAttribute('min', '0');
+            inputCell.setAttribute('max', '9');
 
-            setValueToCell(cell, fieldCell.value, fieldCell.userName);
+            inputCell.addEventListener('input', inputCellHandler);
 
-            td.appendChild(cell);
+            td.appendChild(inputCell);
             tr.appendChild(td);
         }
 
         table.appendChild(tr);
     }
+
+    tableContainer.appendChild(table);
 }
 
-function setValueToCell(cell, value, userName) {
-    cell.setAttribute('user', userName);
-
-    var currentUserName = document.getElementById("userInput").value;
-    var editable = (value == 0) || (currentUserName == cell.userName);
-    if (!editable)
+function fillTable(field) {
+    var cells = listToMatrix(field.cells, field.rank);
+    for (var row = 0; row < field.rank; row++)
     {
-        cell.setAttribute('disabled', 'disabled');
+        for (var col = 0; col < field.rank; col++)
+        {
+            var fieldCell = cells[row][col];
+            var cellId = getCellId(row, col);
+            var inputCell = document.getElementById(cellId);
+
+            fillInputCell(inputCell, fieldCell);
+        }
+    }
+}
+
+function inputCellHandler(event) {
+    var inputCell = event.target;
+    var index = inputCell.id.split(',');
+    var row = parseInt(index[0]);
+    var col = parseInt(index[1]);
+
+    var value = parseInt(inputCell.value) || 0;
+
+    connection.invoke("UpdateCellValue", row, col, value).catch(function (err) {
+        return console.error(err.toString());
+    });
+
+    event.preventDefault();
+};
+
+function getCellId(row, col) {
+    return `${row},${col}`;
+}
+
+function fillInputCell(inputCell, fieldCell) {
+    inputCell.setAttribute('user', fieldCell.userName);
+    inputCell.disabled = !fieldCell.editable;
+    
+    if (fieldCell.isCompeting) {
+        inputCell.classList.add("competting");
+    } else {
+        inputCell.classList.remove("competting");
     }
 
-    var cellValue = value == 0 ? '' : value;
-    cell.setAttribute('value', cellValue);
+    var cellValue = fieldCell.value == 0 ? '' : fieldCell.value;
+    inputCell.value = cellValue;
 }
 
 function listToMatrix(list, elementsPerSubArray) {

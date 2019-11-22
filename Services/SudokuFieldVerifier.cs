@@ -1,56 +1,49 @@
-using System;
 using System.Collections.Generic;
+using System.Drawing;
 using Sudoku.Models.Game;
 
 namespace Sudoku.Services
 {
     public class SudokuFieldVerifier : ISudokuFieldVerifier
     {
-        public bool Verify(Field field, byte cellRow, byte cellCol, byte cellValue, out List<Tuple<byte, byte>> competingCellIndexes)
+        public bool Verify(
+            Field field,
+            int cellRow,
+            int cellCol,
+            byte cellValue,
+            out List<Point> competingValueCoordinates)
         {
             var result = true;
-            competingCellIndexes = new List<Tuple<byte, byte>>();
-            result &= RowVerify(field, cellRow, cellCol, cellValue, competingCellIndexes);
-            result &= ColVerify(field, cellRow, cellCol, cellValue, competingCellIndexes);
+
+            // координаты повтороящихся значений
+            competingValueCoordinates = new List<Point>();
+            result &= RowVerify(field, cellRow, cellCol, cellValue, competingValueCoordinates);
+            result &= ColVerify(field, cellRow, cellCol, cellValue, competingValueCoordinates);
+            result &= SubFieldVerify(field, cellRow, cellCol, cellValue, competingValueCoordinates);
+
+            if (!result)
+            {
+                competingValueCoordinates.Add(new Point(cellRow, cellCol));
+            }
 
             return result;
-
-            // for (int row = 0; row < field.Rank; row += 3)
-            // {
-            //     for (int col = 0; col < field.Rank; col += 3)
-            //     {
-            //         for (int subRow = 0; subRow < 3; subRow++)
-            //         {
-            //             for (int subCol = 0; subCol < 3; subCol++)
-            //             {
-            //                 ref Cell currentCell = ref field.Cells[row + subRow, col + subCol];
-
-            //                 if (currentCell.Value.Equals(firstTargetValue))
-            //                 {
-            //                     currentCell.Value = secondTargetValue;
-            //                     continue;
-            //                 }
-
-            //                 if (currentCell.Value.Equals(secondTargetValue))
-            //                 {
-            //                     currentCell.Value = firstTargetValue;
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
         }
 
-        private bool RowVerify(Field field, byte cellRow, byte cellCol, byte cellValue, List<Tuple<byte, byte>> competingCellIndexes)
+        private bool RowVerify(
+            Field field,
+            int cellRow,
+            int cellCol,
+            byte cellValue,
+            List<Point> competingValueCoordinates)
         {
             var result = true;
 
-            for (byte col = 0; col < field.Rank; col++)
+            for (var col = 0; col < field.Rank; col++)
             {
                 var fieldCellValue = field.Cells[cellRow, col].Value; 
                 if ((fieldCellValue > 0) && fieldCellValue.Equals(cellValue))
                 {
-                    competingCellIndexes.Add(new Tuple<byte, byte>(cellRow, col));
+                    competingValueCoordinates.Add(new Point(cellRow, col));
                     result = false;
                 }
             }
@@ -58,17 +51,50 @@ namespace Sudoku.Services
             return result;
         }
 
-        private bool ColVerify(Field field, byte cellRow, byte cellCol, byte cellValue, List<Tuple<byte, byte>> competingCellIndexes)
+        private bool ColVerify(
+            Field field,
+            int cellRow,
+            int cellCol,
+            byte cellValue,
+            List<Point> competingValueCoordinates)
         {
             var result = true;
 
-            for (byte row = 0; row < field.Rank; row++)
+            for (var row = 0; row < field.Rank; row++)
             {
-                var fieldCellValue = field.Cells[row, cellCol].Value; 
+                var fieldCellValue = field.Cells[row, cellCol].Value;
                 if ((fieldCellValue > 0) && fieldCellValue.Equals(cellValue))
                 {
-                    competingCellIndexes.Add(new Tuple<byte, byte>(row, cellCol));
+                    competingValueCoordinates.Add(new Point(row, cellCol));
                     result = false;
+                }
+            }
+
+            return result;
+        }
+
+        private bool SubFieldVerify(
+            Field field,
+            int cellRow,
+            int cellCol,
+            byte cellValue,
+            List<Point> competingValueCoordinates)
+        {
+            var result = true;
+
+            var startSubRow = (cellRow / 3) * 3;
+            var starutSubCol = (cellCol / 3) * 3;
+            
+            for (var subRow = startSubRow; subRow < startSubRow + 3; subRow++)
+            {
+                for (var subCol = starutSubCol; subCol < starutSubCol + 3; subCol++)
+                {
+                    var fieldCellValue = field.Cells[subRow, subCol].Value; 
+                    if ((fieldCellValue > 0) && fieldCellValue.Equals(cellValue))
+                    {
+                        competingValueCoordinates.Add(new Point(subRow, subCol));
+                        result = false;
+                    }
                 }
             }
 

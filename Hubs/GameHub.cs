@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Drawing;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using Sudoku.Exceptions;
@@ -14,40 +16,31 @@ namespace Sudoku.Hubs
 
         protected ISudokuCore SudokuCore { get; } 
 
-        public async Task SendMessage(string user, string message)
-        {
-            await Clients.All.SendAsync("ReceiveMessage", user, message);
-        }
-
         public async Task UpdateCellValue(byte row, byte col, byte value)
         {
             var connectionId = Context.ConnectionId;
             var user = SudokuCore.GetUserByConnectionId(connectionId);
 
+            List<Point> competingValueCoordinates = null;
             try
             {
-                SudokuCore.UpdateCell(row, col, value, connectionId);
-                
-                // обновляем у остальных ползователей ячейку с признаком readonly
-                await Clients.AllExcept(connectionId).SendAsync("ReceiveCellValue", row, col, value, user.Name);
-            }
-            catch (CompettingCellIndexesException exception)
-            {
-                await Clients.Caller.SendAsync("CompettingCellIndexesException", row, col, exception.Cells);    
-            }
-        }
+                var cell = SudokuCore.UpdateCell(row, col, value, connectionId);
 
-        public override async Task OnConnectedAsync()
-        {
-            // var user = SudokuCore.GetUserByConnectionId(Context.ConnectionId);
-            // if (user == null)
-            // {
-            //     await Clients.Caller.SendAsync("Signup");
-            // }
-            // else
-            // {
-            //     await Clients.Caller.SendAsync("DrawField", SudokuCore.CurrentRound.Field);
-            // }
+                // обновляем у остальных пользователей ячейку с признаком readonly
+                await Clients.AllExcept(connectionId).SendAsync("ReceiveCellValue", row, col, cell);
+            }
+            catch (CompetingValueCoordinatesException exception)
+            {
+                competingValueCoordinates = exception.Cells;
+            }
+
+            var userField = SudokuCore.GetFieldForUser(user);
+            if (competingValueCoordinates != null)
+            {
+                SudokuCore.AddCompetingValues(userField, competingValueCoordinates, value);
+            }
+
+            await Clients.Caller.SendAsync("DrawField", userField);
         }
 
         public async Task SignedUser(string name)
@@ -56,8 +49,9 @@ namespace Sudoku.Hubs
             if (user == null)
             {
                 user = SudokuCore.CreateUser(Context.ConnectionId, name);
-                await Clients.Caller.SendAsync("DrawField", SudokuCore.CurrentRound.Field);
             }
+
+            await Clients.Caller.SendAsync("DrawField", SudokuCore.GetFieldForUser(user));
         }
     }
 }

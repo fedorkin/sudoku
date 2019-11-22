@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Drawing;
 using Sudoku.Models;
 using Sudoku.Models.Game;
 
@@ -16,8 +17,10 @@ namespace Sudoku.Services
 
         ICollection<User> GetTopUsers(int limit);
 
-        Cell UpdateCell(byte rowIndex, byte colIndex, byte value, string connectionId);
+        Cell UpdateCell(int rowIndex, int colIndex, byte value, string connectionId);
 
-        //Field GetFieldForUser(User user);
+        Field GetFieldForUser(User user);
+
+        void AddCompetingValues(Field field, List<Point> competingValueCoordinates, byte value);
     }
 }

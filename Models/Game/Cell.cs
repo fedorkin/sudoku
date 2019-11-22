@@ -4,6 +4,10 @@ namespace Sudoku.Models.Game
     {
         public byte Value { get; set; }
         
+        public bool Editable { get; set; }
+
+        public bool IsCompeting { get; set; }
+
         public string UserName { get; set; }
     }
 }
